@@ -1,0 +1,68 @@
+stages:
+  - test
+  - deploy
+
+cache:
+  key: 'meter_verification'
+  paths:
+    - vendor/
+    - bin/.phpunit
+
+test:
+  stage: test
+  variables:
+    GIT_STRATEGY: fetch
+    SYMFONY_ENV: test
+  script:
+    - export COMPOSER_ALLOW_SUPERUSER=1 && composer install --no-interaction --no-scripts --no-suggest --no-progress
+    - ./bin/phpunit --coverage-text --colors=never --exclude-group=functional
+
+.deploy: &deploy_definition
+  variables:
+    GIT_STRATEGY: fetch
+  before_script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\tPasswordAuthentication no\n\n" > ~/.ssh/config'
+    - '[[ -f /.dockerenv ]] && echo "$SSH_SERVER_HOSTKEYS" > ~/.ssh/known_hosts'
+  when: manual
+  stage: deploy
+  dependencies:
+    - test
+
+deploy:dev:
+  <<: *deploy_definition
+  script:
+    - ssh $DEV_USER@$DEV_HOST "mkdir -p $DEV_TEMP_PATH && rm -rf $DEV_TEMP_PATH && mkdir -p $DEV_TEMP_PATH"
+    - rsync -zap -e ssh -v --delete --exclude='.git/' --exclude='vendor/' --exclude='var/' --exclude='bin/.phpunit/' --exclude='.env.local' --exclude='docker-compose.override.yaml' --exclude='phpunit.xml' . $DEV_USER@$DEV_HOST:$DEV_TEMP_PATH
+    - ssh $DEV_USER@$DEV_HOST "cd $DEV_TEMP_PATH && rsync -zap -e ssh -v --delete --exclude='.git/' --exclude='vendor/' --exclude='var/' --exclude='bin/.phpunit/' --exclude='.env.local' --exclude='docker-compose.override.yaml' --exclude='phpunit.xml' . $DEV_DEPLOY_PATH"
+    - ssh $DEV_USER@$DEV_HOST "cd $DEV_DEPLOY_PATH && make dev_initialize-environment"
+
+  environment:
+    name: dev
+    url:
+  variables:
+    DEV_TEMP_PATH: ""
+    DEV_DEPLOY_PATH: ""
+    DEV_HOST: ""
+    DEV_USER: ""
+
+deploy:prod:
+  <<: *deploy_definition
+  script:
+    - ssh $PROD_USER@$PROD_HOST "mkdir -p $PROD_TEMP_PATH && rm -rf $PROD_TEMP_PATH && mkdir -p $PROD_TEMP_PATH"
+    - rsync -zap -e ssh -v --delete --exclude='.git/' --exclude='vendor/' --exclude='var/' --exclude='bin/.phpunit/' --exclude='.env.local' --exclude='docker-compose.override.yaml' --exclude='phpunit.xml' . $PROD_USER@$PROD_HOST:$PROD_TEMP_PATH
+    - ssh $PROD_USER@$PROD_HOST "cd $PROD_TEMP_PATH && rsync -zap -e ssh -v --delete --exclude='.git/' --exclude='vendor/' --exclude='var/' --exclude='bin/.phpunit/' --exclude='.env.local' --exclude='docker-compose.override.yaml' --exclude='phpunit.xml' . $PROD_DEPLOY_PATH"
+    - ssh $PROD_USER@$PROD_HOST "cd $PROD_DEPLOY_PATH && make prod_initialize-environment"
+  only:
+    - master
+
+  environment:
+    name: prod
+    url:
+  variables:
+    PROD_TEMP_PATH: ""
+    PROD_DEPLOY_PATH: ""
+    PROD_HOST: ""
+    PROD_USER: ""

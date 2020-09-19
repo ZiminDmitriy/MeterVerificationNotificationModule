@@ -1,0 +1,60 @@
+doctrine:
+    dbal:
+        default_connection: 'default'
+        connections:
+            default:
+                url: '%env(resolve:DATABASE_URL)%'
+                driver: 'pdo_mysql'
+                server_version: '5.7'
+                #               Only needed for MySQL (ignored otherwise)
+                charset: utf8
+                default_table_options:
+                    charset: utf8
+                    collate: utf8_general_ci
+                    engine: InnoDB
+        types:
+            PreparedNotificationDataIdType:
+                class: 'App\Doctrine\Type\Entity\Entity\PreparedNotificationData\PreparedNotificationDataIdType'
+            SiftedPreparedNotificationDataIdType:
+                class: 'App\Doctrine\Type\Entity\Entity\SiftedPreparedNotificationData\SiftedPreparedNotificationDataIdType'
+            SiftedPreparedNotificationDataSendingDateType:
+                class: 'App\Doctrine\Type\Entity\Entity\SiftedPreparedNotificationData\SiftedPreparedNotificationDataSendingDateType'
+            ExecutedNotificationDataIdType:
+                class: 'App\Doctrine\Type\Entity\Entity\ExecutedNotificationData\ExecutedNotificationDataIdType'
+            NotificationJobIdIdType:
+                class: 'App\Doctrine\Type\Entity\Entity\NotificationJobId\NotificationJobIdIdType'
+            NotificationJobIdSendingDateTimeType:
+                class: 'App\Doctrine\Type\Entity\Entity\NotificationJobId\NotificationJobIdSendingDateTimeType'
+            NotificationJobIdExecutionStatusType:
+                class: 'App\Doctrine\Type\Entity\Entity\NotificationJobId\NotificationJobIdExecutionStatusType'
+            NotificationJobIdMessagesQuantityType:
+                class: 'App\Doctrine\Type\Entity\Entity\NotificationJobId\NotificationJobIdMessagesQuantityType'
+            NotificationRetransmissionGuardIdType:
+                class: 'App\Doctrine\Type\Entity\Entity\NotificationRetransmissionGuard\NotificationRetransmissionGuardIdType'
+            NotificationRetransmissionGuardSendingDateType:
+                class: 'App\Doctrine\Type\Entity\Entity\NotificationRetransmissionGuard\NotificationRetransmissionGuardSendingDateType'
+            AbstractNotificationDataContractType:
+                class: 'App\Doctrine\Type\Entity\ForEntity\AbstractEntity\AbstractNotificationData\AbstractNotificationDataContractType'
+            AbstractNotificationDataMeterIdType:
+                class: 'App\Doctrine\Type\Entity\ForEntity\AbstractEntity\AbstractNotificationData\AbstractNotificationDataMeterIdType'
+            AbstractNotificationDataMeterNextCheckDateType:
+                class: 'App\Doctrine\Type\Entity\ForEntity\AbstractEntity\AbstractNotificationData\AbstractNotificationDataMeterNextCheckDateType'
+            AbstractPreparedNotificationDataEmailType:
+                class: 'App\Doctrine\Type\Entity\ForEntity\AbstractEntity\AbstractPreparedNotificationData\AbstractPreparedNotificationDataEmailType'
+            AbstractPreparedNotificationDataMeterFactoryNumberType:
+                class: 'App\Doctrine\Type\Entity\ForEntity\AbstractEntity\AbstractPreparedNotificationData\AbstractPreparedNotificationDataMeterFactoryNumberType'
+            AbstractPreparedNotificationDataPhoneType:
+                class: 'App\Doctrine\Type\Entity\ForEntity\AbstractEntity\AbstractPreparedNotificationData\AbstractPreparedNotificationDataPhoneType'
+            PreparedNotificationDataMeterModelType:
+                class: 'App\Doctrine\Type\Entity\ForEntity\AbstractEntity\AbstractPreparedNotificationData\PreparedNotificationDataMeterModelType'
+    orm:
+        auto_generate_proxy_classes: false
+        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+        auto_mapping: true
+        mappings:
+            App:
+                is_bundle: false
+                type: annotation
+                dir: '%kernel.project_dir%/src/Entity'
+                prefix: 'App\Entity'
+                alias: App

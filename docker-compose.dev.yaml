@@ -1,0 +1,45 @@
+version: '3.7'
+
+services:
+    nginx_php-fpm:
+        container_name: meter_verification-nginx_php-fpm
+        build:
+            context: .docker/dev/nginx_php-fpm
+            dockerfile: nginx_php-fpm.dockerfile
+        depends_on:
+            - mysql-main
+            - rabbitmq
+        command: bash -c "service php7.4-fpm start && service nginx start && supervisord && /bin/bash"
+        working_dir: /var/www/app
+        ports:
+            - 8888:80
+        volumes:
+            - .:/var/www/app
+        restart: always
+        tty: true
+        init: true
+    mysql-main:
+        image: mysql:5.7
+        container_name: meter_verification-mysql-main
+        environment:
+            MYSQL_DATABASE: 'meter_verification'
+            MYSQL_USER: 'user'
+            MYSQL_PASSWORD: 'password'
+            MYSQL_ROOT_PASSWORD: 'password'
+        ports:
+            - 42306:3306
+        volumes:
+            - mysql/:/var/lib/mysql
+        restart: always
+        tty: true
+        init: true
+    rabbitmq:
+        image: rabbitmq:3.8.3-management
+        container_name: meter_verification-rabbitmq
+        ports:
+            - 35671:5672
+            - 35673:15672
+        restart: always
+volumes:
+    mysql:
+        driver: local
